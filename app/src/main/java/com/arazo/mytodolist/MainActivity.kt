@@ -7,6 +7,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,18 +24,17 @@ class MainActivity : AppCompatActivity() {
 		super.onCreate(savedInstanceState)
 		binding = ActivityMainBinding.inflate(layoutInflater)
 		val view = binding.root
+		setContentView(view)
 
 		binding.containerRecyclerView.apply {
 			layoutManager = LinearLayoutManager(this@MainActivity)
 			adapter = TodoAdapter(
-				viewModel.data,
+				emptyList(),
 				onClickDeleteIcon = {
 					viewModel.deleteTodo(it)
-					binding.containerRecyclerView.adapter?.notifyDataSetChanged()
 				},
 				onClickItem = {
 					viewModel.toggleTodo(it)
-					binding.containerRecyclerView.adapter?.notifyDataSetChanged()
 				}
 			)
 		}
@@ -41,10 +42,14 @@ class MainActivity : AppCompatActivity() {
 		binding.btnAdd.setOnClickListener {
 			val todo = Todo(binding.etText.text.toString())
 			viewModel.addTodo(todo)
-			binding.containerRecyclerView.adapter?.notifyDataSetChanged()
 		}
 
-		setContentView(view)
+		// 관찰 UI 업데이트
+		viewModel.todoLiveData.observe(this@MainActivity, Observer {
+			(binding.containerRecyclerView.adapter as TodoAdapter).setData(it)
+		})
+
+
 	}
 }
 
@@ -54,7 +59,7 @@ data class Todo(
 )
 
 class TodoAdapter(
-	private val myDataset: List<Todo>,
+	private var myDataset: List<Todo>,
 	val onClickDeleteIcon: (todo: Todo) -> Unit, // input이 하나고 output이 없는 함수
 	val onClickItem: (todo: Todo) -> Unit,
 ) :
@@ -99,20 +104,31 @@ class TodoAdapter(
 	}
 
 	override fun getItemCount() = myDataset.size
+
+	fun setData(newData: List<Todo>) {
+		myDataset = newData
+		notifyDataSetChanged()
+	}
 }
 
 class MainViewModel : ViewModel() {
-	val data = arrayListOf<Todo>()
+	// 변경가능하고 관찰가능한 라이브데이터
+	val todoLiveData = MutableLiveData<List<Todo>>()
+
+	private val data = arrayListOf<Todo>()
 
 	fun toggleTodo(todo: Todo) {
 		todo.isDone = !todo.isDone
+		todoLiveData.value = data
 	}
 
 	fun addTodo(todo: Todo) {
 		data.add(todo)
+		todoLiveData.value = data
 	}
 
 	fun deleteTodo(todo: Todo) {
 		data.remove(todo)
+		todoLiveData.value = data
 	}
 }

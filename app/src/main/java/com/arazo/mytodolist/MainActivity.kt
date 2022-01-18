@@ -14,17 +14,38 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.arazo.mytodolist.databinding.ActivityMainBinding
 import com.arazo.mytodolist.databinding.ItemTodoBinding
+import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
 	private lateinit var binding: ActivityMainBinding
 
 	private val viewModel: MainViewModel by viewModels()
 
+	private val signInLauncher = registerForActivityResult(
+		FirebaseAuthUIActivityResultContract()
+	) { res ->
+		this.onSignInResult(res)
+	}
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		binding = ActivityMainBinding.inflate(layoutInflater)
 		val view = binding.root
 		setContentView(view)
+
+		// 로그인이 안 됨
+		if (FirebaseAuth.getInstance().currentUser == null) {
+			val providers = arrayListOf(AuthUI.IdpConfig.EmailBuilder().build())
+
+			val signInIntent = AuthUI.getInstance()
+				.createSignInIntentBuilder()
+				.setAvailableProviders(providers)
+				.build()
+			signInLauncher.launch(signInIntent)
+		}
 
 		binding.containerRecyclerView.apply {
 			layoutManager = LinearLayoutManager(this@MainActivity)
@@ -48,8 +69,19 @@ class MainActivity : AppCompatActivity() {
 		viewModel.todoLiveData.observe(this@MainActivity, Observer {
 			(binding.containerRecyclerView.adapter as TodoAdapter).setData(it)
 		})
+	}
 
 
+	private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
+		val response = result.idpResponse
+		if (result.resultCode == RESULT_OK) {
+			// Successfully signed in
+			val user = FirebaseAuth.getInstance().currentUser
+			// ...
+		} else {
+			// 로그인 실패
+			finish()
+		}
 	}
 }
 

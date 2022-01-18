@@ -1,6 +1,9 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+
+    // Firebase
+    id 'com.google.gms.google-services'
 }
 
 android {
@@ -47,4 +50,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
     implementation("androidx.fragment:fragment-ktx:1.4.0")
+
+    // Firebase
+    implementation 'com.firebaseui:firebase-ui-auth:7.2.0'
 }

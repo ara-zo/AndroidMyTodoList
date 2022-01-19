@@ -178,8 +178,6 @@ class MainViewModel : ViewModel() {
 	// Firebase DB
 	val db = Firebase.firestore
 
-	val user = FirebaseAuth.getInstance().currentUser
-
 	// 변경가능하고 관찰가능한 라이브데이터
 	val todoLiveData = MutableLiveData<List<DocumentSnapshot>>()
 
@@ -188,6 +186,7 @@ class MainViewModel : ViewModel() {
 	}
 
 	fun fetchData() {
+		var user = FirebaseAuth.getInstance().currentUser
 		if (user != null) {
 			db.collection(user.uid)
 				.addSnapshotListener { value, e ->
@@ -203,20 +202,20 @@ class MainViewModel : ViewModel() {
 	}
 
 	fun toggleTodo(todo: DocumentSnapshot) {
-		user?.let { user ->
+		FirebaseAuth.getInstance().currentUser?.let { user ->
 			val isDone = todo.getBoolean("isDone") ?: false
 			db.collection(user.uid).document(todo.id).update("isDone", !isDone)
 		}
 	}
 
 	fun addTodo(todo: Todo) {
-		user?.let { user ->
+		FirebaseAuth.getInstance().currentUser?.let { user ->
 			db.collection(user.uid).add(todo)
 		}
 	}
 
 	fun deleteTodo(todo: DocumentSnapshot) {
-		user?.let { user ->
+		FirebaseAuth.getInstance().currentUser?.let { user ->
 			db.collection(user.uid).document(todo.id).delete()
 		}
 	}

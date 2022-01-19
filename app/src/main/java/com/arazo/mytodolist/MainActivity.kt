@@ -203,8 +203,10 @@ class MainViewModel : ViewModel() {
 	}
 
 	fun toggleTodo(todo: DocumentSnapshot) {
-//		todo.isDone = !todo.isDone
-//		todoLiveData.value = data
+		user?.let { user ->
+			val isDone = todo.getBoolean("isDone") ?: false
+			db.collection(user.uid).document(todo.id).update("isDone", !isDone)
+		}
 	}
 
 	fun addTodo(todo: Todo) {

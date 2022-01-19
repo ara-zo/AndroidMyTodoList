@@ -3,8 +3,7 @@ package com.arazo.mytodolist
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.ViewGroup
+import android.view.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.MutableLiveData
@@ -30,21 +29,32 @@ class MainActivity : AppCompatActivity() {
 		this.onSignInResult(res)
 	}
 
+	override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+		val inflater: MenuInflater = menuInflater
+		inflater.inflate(R.menu.main, menu)
+		return true
+	}
+
+	override fun onOptionsItemSelected(item: MenuItem): Boolean {
+		// Handle item selection
+		return when (item.itemId) {
+			R.id.action_log_out -> {
+				logout()
+				true
+			}
+			else -> super.onOptionsItemSelected(item)
+		}
+	}
+
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		binding = ActivityMainBinding.inflate(layoutInflater)
 		val view = binding.root
 		setContentView(view)
 
-		// 로그인이 안 됨
+		// 로그인을 안했을 때
 		if (FirebaseAuth.getInstance().currentUser == null) {
-			val providers = arrayListOf(AuthUI.IdpConfig.EmailBuilder().build())
-
-			val signInIntent = AuthUI.getInstance()
-				.createSignInIntentBuilder()
-				.setAvailableProviders(providers)
-				.build()
-			signInLauncher.launch(signInIntent)
+			login()
 		}
 
 		binding.containerRecyclerView.apply {
@@ -82,6 +92,24 @@ class MainActivity : AppCompatActivity() {
 			// 로그인 실패
 			finish()
 		}
+	}
+
+	fun login() {
+		val providers = arrayListOf(AuthUI.IdpConfig.EmailBuilder().build())
+
+		val signInIntent = AuthUI.getInstance()
+			.createSignInIntentBuilder()
+			.setAvailableProviders(providers)
+			.build()
+		signInLauncher.launch(signInIntent)
+	}
+
+	fun logout() {
+		AuthUI.getInstance()
+			.signOut(this)
+			.addOnCompleteListener {
+				login()
+			}
 	}
 }
 

@@ -187,15 +187,18 @@ class MainViewModel : ViewModel() {
 
 	fun fetchData() {
 		val user = FirebaseAuth.getInstance().currentUser
-		if(user != null){
+		if (user != null) {
 			db.collection(user.uid)
-				.get()
-				.addOnSuccessListener { result ->
+				.addSnapshotListener { value, e ->
+					if (e != null) {
+						return@addSnapshotListener
+					}
+
 					data.clear()
-					for (document in result) {
+					for (document in value!!) {
 						val todo = Todo(
-							document.data["text"].toString(),
-							document.data["isDone"] as Boolean
+							document.getString("text") ?: "",
+							document.getBoolean("isDone") ?: false
 						)
 						data.add(todo)
 					}
